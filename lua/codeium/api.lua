@@ -384,7 +384,7 @@ function Server:new()
 						end
 						return complete(false, nil)
 					end
-					if json.code == "canceled" then
+					if json.code == "canceled" or json.message == "canceled: context canceled" then
 						log.debug("completion request cancelled at the server", json.message)
 						return complete(false, nil)
 					end
