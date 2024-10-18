@@ -7,6 +7,8 @@
 [![Discord](https://img.shields.io/discord/1027685395649015980?label=community&color=5865F2&logo=discord&logoColor=FFFFFF)](https://discord.gg/3XFf78nAx5)
 [![Twitter Follow](https://img.shields.io/badge/style--blue?style=social&logo=twitter&label=Follow%20%40codeiumdev)](https://twitter.com/intent/follow?screen_name=codeiumdev)
 ![License](https://img.shields.io/github/license/Exafunction/codeium.nvim)
+[![Docs](https://img.shields.io/badge/Codeium%20Docs-09B6A2)](https://docs.codeium.com)
+[![Canny Board](https://img.shields.io/badge/Feature%20Requests-6b69ff)](https://codeium.canny.io/feature-requests/)
 [![built with Codeium](https://codeium.com/badges/main)](https://codeium.com?repo_name=exafunction%2Fcodeium.nvim)
 
 [![Visual Studio](https://img.shields.io/visual-studio-marketplace/i/Codeium.codeium?label=Visual%20Studio&logo=visualstudio)](https://marketplace.visualstudio.com/items?itemName=Codeium.codeium)
@@ -66,8 +68,7 @@ After installation and configuration, you will need to authenticate with
 Codeium. This can be done by running `:Codeium Auth`, copying the token from
 your browser and pasting it into API token request.
 
-To use Codeium Chat, execute the `:Codeium Chat` command (this feature is only
-available when chat is enabled in the [configuration](#options)). The chat will be opened
+To use Codeium Chat, execute the `:Codeium Chat` command. The chat will be opened
 in your default browser using the xdg-open command.
 
 ## Options
@@ -82,6 +83,10 @@ in your default browser using the xdg-open command.
 - `enterprise_mode`: enable enterprise mode
 - `detect_proxy`: enable or disable proxy detection
 - `enable_chat`: enable chat functionality
+- `workspace_root`:
+  - `use_lsp`: Use Neovim's LSP support to find the workspace root, if possible.
+  -	`paths`: paths to files that indicate a workspace root when not using the LSP support
+  - `find_root`: An optional function that the plugin will call to find the workspace root.
 - `tools`: paths to binaries used by the plugin:
 
   - `uname`: not needed on Windows, defaults given.
@@ -128,9 +133,51 @@ cmp.setup({
 })
 ```
 
+### Workspace Root Directory
+
+The plugin uses a few techniques to find the workspace root directory, which helps to inform the autocomplete and chat context. 
+
+1. Call the optional `workspace_root.find_root` function, if provided. This is described below.
+2. Query Neovim's built-in LSP support for the workspace root, if `workspace_root.use_lsp` is not set to `false`.
+3. Search upward in the filesystem for a file or directory in `workspace_root.paths` that indicates a workspace root.
+
+The default configuration is:
+
+```lua
+require('codeium').setup({
+	workspace_root = {
+		use_lsp = true,
+		find_root = nil,
+		paths = {
+			".bzr",
+			".git",
+			".hg",
+			".svn",
+			"_FOSSIL_",
+			"package.json",
+		}
+	}
+})
+```
+
+The `find_root` function can help the plugin find the workspace root when you are not using Neovim's built-in LSP
+provider. For example, this snippet calls into `coc.nvim` to find the workspace root.
+
+```lua
+require('codeium').setup({
+	workspace_root = {
+		find_root = function()
+			return vim.fn.CocAction("currentWorkspacePath")
+		end
+	}
+})
+```
+
+
+
 ## Troubleshooting
 
-The plugin log is written to `~/.cache/nvim/codeium.log`.
+The plugin log is written to `~/.cache/nvim/codeium/codeium.log`.
 
 You can set the logging level to one of `trace`, `debug`, `info`, `warn`,
 `error` by exporting the `DEBUG_CODEIUM` environment variable.
